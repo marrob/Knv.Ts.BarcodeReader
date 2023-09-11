@@ -19,6 +19,7 @@
         public static string Read(string resource, string type, int timeoutMs, int cmdPort, int dataPort, bool simulation)
         {
             string barcode = "";
+
             if (simulation)
             {
                 barcode = "1234567890";
@@ -39,8 +40,8 @@
                                 {
                                     try
                                     {
-                                        string triggerCmd = "LON\r\n";
-                                        cmdStream.Write(Encoding.ASCII.GetBytes(triggerCmd), 0, triggerCmd.Length);
+                                         string triggerCmd = "LON\r\n";
+                                         cmdStream.Write(Encoding.ASCII.GetBytes(triggerCmd), 0, triggerCmd.Length);
 
                                         byte[] data = new byte[512];
                                         int receivedDataLength = dataStream.Read(data, 0, data.Length);
@@ -48,10 +49,10 @@
                                     }
                                     catch (Exception ex)
                                     {
-                                        lastException = ex;
+                                            lastException = ex;
                                     }
                                     finally
-                                    { 
+                                    {
                                         string offCmd = "LOFF\r\n";
                                         cmdStream.Write(Encoding.ASCII.GetBytes(offCmd), 0, offCmd.Length);
                                     }
@@ -60,7 +61,17 @@
                                         break;
                                 }
                                 if (lastException != null)
-                                    throw new Exception($"The barcode reader cannot read... Details:{lastException.Message}");
+                                {
+                                    if (lastException.Message.Contains("did not properly respond after a period of time"))
+                                    {//A timeout hibát nem dobom tovább hibakén, Ezt TS-ből egyszerűbb értelmezni. 
+                                        barcode = "Error Timeout";
+                                        lastException = null;
+                                    }
+                                    else
+                                    {
+                                        throw new Exception($"Error: The barcode reader cannot read... Details:{lastException.Message}");
+                                    }
+                                }
                             }
                         }
                     } 
